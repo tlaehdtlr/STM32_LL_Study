@@ -24,7 +24,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include <stdio.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -92,15 +92,13 @@ int main(void)
   MX_USART1_UART_Init();
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
-
-  LL_USART_EnableIT_RXNE(USART2);
-  LL_USART_EnableIT_IDLE(USART2);
-  LL_USART_EnableIT_ERROR(USART2);
+  uart_init();
 
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+  printf("===== This is LL basic =====\r\n");
   while (1)
   {
 	  uart_idle();

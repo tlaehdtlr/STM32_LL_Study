@@ -41,6 +41,7 @@ void MX_USART2_UART_Init(void);
 
 /* USER CODE BEGIN Prototypes */
 void uart_idle(void);
+void uart_init(void);
 void uart_irq_rx_callback(USART_TypeDef *USARTx);
 /* USER CODE END Prototypes */
 

@@ -19,16 +19,28 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "usart.h"
-
+#include <stdbool.h>
+#include <stdio.h>
 /* USER CODE BEGIN 0 */
 #define DEBUG_USART     USART1
 #define UART_RX_BUF_SIZE    256
+
+volatile uint8_t uart1_idle = 0;
+
+static uint8_t              uart1_rx_buf[UART_RX_BUF_SIZE] = {0,};
+static volatile uint32_t    uart1_rx_idx = 0;
+static volatile uint32_t    uart1_read_idx = 0;
+static uint8_t              cmd[UART_RX_BUF_SIZE] = {0,};
+static volatile uint8_t     cmd_idx = 0;
+
 
 volatile uint8_t uart2_idle = 0;
 
 static uint8_t              uart2_rx_buf[UART_RX_BUF_SIZE] = {0,};
 static volatile uint32_t    uart2_rx_idx = 0;
 static volatile uint32_t    uart2_read_idx = 0;
+
+
 
 
 /* USER CODE END 0 */
@@ -155,8 +167,61 @@ void MX_USART2_UART_Init(void)
 }
 
 /* USER CODE BEGIN 1 */
+static bool process_cmd(uint8_t cmd_ch)
+{
+  /* check if valid character */
+  if ((cmd_ch >= ' ') && (cmd_ch <= '~'))
+  {
+      cmd[cmd_idx++] = cmd_ch;
+      printf("%c", cmd_ch);
+      // printf("a");
+      // LL_USART_TransmitData8(DEBUG_USART, cmd_ch);
+  }
+
+  /* delete if back space is pressed */
+  if (cmd_ch == '\b')
+  {
+    if (cmd_idx)
+    {
+      cmd[--cmd_idx] = 0;
+      printf("\b\x1B[K");
+    }
+  }
+  /* do parsing command if input is enter key */
+  if ((cmd_ch == '\r') || (cmd_ch == '\n'))
+  {
+    cmd[cmd_idx++] = cmd_ch;
+    printf("\r\n");
+    return true;
+  }
+
+  return false;
+}
+
+
 void uart_idle(void)
 {
+	if (uart1_idle)
+	{
+		LL_USART_DisableIT_RXNE(USART1);
+
+    while (uart1_rx_idx != uart1_read_idx)
+    {
+      if (process_cmd(uart1_rx_buf[uart1_read_idx++ & (UART_RX_BUF_SIZE-1)]))
+      {
+        printf(" cmd : %s \r\n", cmd);
+        while (cmd_idx)
+        {
+          cmd[--cmd_idx] = 0;
+        }
+      }
+    }      
+
+    LL_USART_EnableIT_RXNE(USART1);
+
+		uart1_idle = 0;
+	}
+
 	if (uart2_idle)
 	{
 		LL_USART_DisableIT_RXNE(USART2);
@@ -172,6 +237,20 @@ void uart_idle(void)
 		uart2_idle = 0;
 	}
 }
+
+void uart_init(void)
+{
+  LL_USART_EnableIT_RXNE(USART1);
+  LL_USART_EnableIT_IDLE(USART1);
+  LL_USART_EnableIT_ERROR(USART1);
+  
+  LL_USART_EnableIT_RXNE(USART2);
+  LL_USART_EnableIT_IDLE(USART2);
+  LL_USART_EnableIT_ERROR(USART2);
+
+  setbuf(stdout, NULL);
+}
+
 
 void uart_error_callback(USART_TypeDef *USARTx)
 {
@@ -192,7 +271,23 @@ void uart_error_callback(USART_TypeDef *USARTx)
 
 void uart_irq_rx_callback(USART_TypeDef *USARTx)
 {
-  if (USARTx == USART2)
+  if (USARTx == USART1)
+  {
+    //read data register not exmpty
+    if(LL_USART_IsActiveFlag_RXNE(USART1))
+    {
+      uart1_rx_buf[uart1_rx_idx++ & (UART_RX_BUF_SIZE-1)] = LL_USART_ReceiveData8(USART1);
+      // LL_USART_ClearFlag_RXNE(USART2);
+    }
+
+    //idle
+    if(LL_USART_IsActiveFlag_IDLE(USART1))
+    {
+      uart1_idle = 1;
+      LL_USART_ClearFlag_IDLE(USART1);
+    }
+  }
+  else if (USARTx == USART2)
   {
     //read data register not exmpty
     if(LL_USART_IsActiveFlag_RXNE(USART2))
@@ -231,14 +326,48 @@ void uart_irq_rx_callback(USART_TypeDef *USARTx)
 
 
 
-
+#if 1
 int _write(int file, char* p, int len)
 {
-    for (int i=0; i<len; i++)
-    {
-      LL_USART_TransmitData8(DEBUG_USART, *(p+i));
-    }
+  for (int i=0; i<len; i++)
+  {
+    while(!LL_USART_IsActiveFlag_TXE(DEBUG_USART));
+    LL_USART_ClearFlag_TC(DEBUG_USART);
+    LL_USART_TransmitData8(DEBUG_USART, *(p+i));
+  }
+  while (LL_USART_IsActiveFlag_TC(DEBUG_USART));
 
-    return len;
+  return len;
 }
+#else
+
+#ifdef __GNUC__
+/* With GCC, small printf (option LD Linker->Libraries->Small printf
+   set to 'Yes') calls __io_putchar() */
+int __io_putchar(int ch)
+#else
+int fputc(int ch, FILE *f)
+#endif /* __GNUC__ */
+{
+  /* Place your implementation of fputc here */
+  /* e.g. write a character to the EVAL_COM1 and Loop until the end of transmission */
+
+  /* Wait for TXE flag to be raised */
+  while (!LL_USART_IsActiveFlag_TXE(DEBUG_USART))
+  {
+  }
+
+  /* Write character in Transmit Data register.
+     TXE flag is cleared by writing data in TDR register */
+  LL_USART_TransmitData8(DEBUG_USART, ch);
+
+  /* Wait for TC flag to be raised for last char */
+  while (!LL_USART_IsActiveFlag_TC(DEBUG_USART))
+  {
+  }
+  
+  return ch;
+}
+
+#endif
 /* USER CODE END 1 */
