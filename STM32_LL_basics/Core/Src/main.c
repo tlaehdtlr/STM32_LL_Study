@@ -93,12 +93,17 @@ int main(void)
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
 
+  LL_USART_EnableIT_RXNE(USART2);
+  LL_USART_EnableIT_IDLE(USART2);
+  LL_USART_EnableIT_ERROR(USART2);
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+	  uart_idle();
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */

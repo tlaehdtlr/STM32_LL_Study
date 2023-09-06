@@ -21,6 +21,15 @@
 #include "usart.h"
 
 /* USER CODE BEGIN 0 */
+#define DEBUG_USART     USART1
+#define UART_RX_BUF_SIZE    256
+
+volatile uint8_t uart2_idle = 0;
+
+static uint8_t              uart2_rx_buf[UART_RX_BUF_SIZE] = {0,};
+static volatile uint32_t    uart2_rx_idx = 0;
+static volatile uint32_t    uart2_read_idx = 0;
+
 
 /* USER CODE END 0 */
 
@@ -146,5 +155,90 @@ void MX_USART2_UART_Init(void)
 }
 
 /* USER CODE BEGIN 1 */
+void uart_idle(void)
+{
+	if (uart2_idle)
+	{
+		LL_USART_DisableIT_RXNE(USART2);
 
+		while (uart2_rx_idx != uart2_read_idx)
+    {
+      while(!LL_USART_IsActiveFlag_TXE(USART2));
+      LL_USART_TransmitData8(USART2, uart2_rx_buf[uart2_read_idx++ & (UART_RX_BUF_SIZE-1)]);
+    }
+
+    LL_USART_EnableIT_RXNE(USART2);
+
+		uart2_idle = 0;
+	}
+}
+
+void uart_error_callback(USART_TypeDef *USARTx)
+{
+  LL_USART_DisableIT_RXNE(USARTx);
+  LL_USART_DisableIT_IDLE(USARTx);
+  LL_USART_DisableIT_ERROR(USARTx);
+
+  // LL_USART_ClearFlag_RXNE(USARTx);
+  LL_USART_ClearFlag_IDLE(USARTx);
+  LL_USART_ClearFlag_FE(USARTx);
+  LL_USART_ClearFlag_ORE(USARTx);
+  LL_USART_ClearFlag_NE(USARTx);
+
+  LL_USART_Disable(USARTx);
+
+  //add your error handling here
+}
+
+void uart_irq_rx_callback(USART_TypeDef *USARTx)
+{
+  if (USARTx == USART2)
+  {
+    //read data register not exmpty
+    if(LL_USART_IsActiveFlag_RXNE(USART2))
+    {
+      uart2_rx_buf[uart2_rx_idx++ & (UART_RX_BUF_SIZE-1)] = LL_USART_ReceiveData8(USART2);
+      // LL_USART_ClearFlag_RXNE(USART2);
+    }
+
+    //idle
+    if(LL_USART_IsActiveFlag_IDLE(USART2))
+    {
+      uart2_idle = 1;
+      LL_USART_ClearFlag_IDLE(USART2);
+    }
+  }
+
+
+  // frame error
+  if(LL_USART_IsActiveFlag_FE(USARTx))
+  {
+    uart_error_callback(USARTx);
+  }
+
+  // overrun error
+  if(LL_USART_IsActiveFlag_ORE(USARTx))
+  {
+    uart_error_callback(USARTx);
+  }
+
+  // noise error
+  if(LL_USART_IsActiveFlag_NE(USARTx))
+  {
+    uart_error_callback(USARTx);
+  }
+}
+
+
+
+
+int _write(int file, char* p, int len)
+{
+    for (int i=0; i<len; i++)
+    {
+      LL_USART_TransmitData8(DEBUG_USART, *(p+i));
+    }
+
+    return len;
+}
 /* USER CODE END 1 */
