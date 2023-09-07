@@ -118,6 +118,9 @@ void tim_init(void)
 {
   LL_TIM_EnableIT_UPDATE(TIM6);
   LL_TIM_EnableCounter(TIM6);
+  
+  LL_TIM_CC_EnableChannel(TIM2, LL_TIM_CHANNEL_CH1);
+  LL_TIM_EnableCounter(TIM2);
 }
 
 void tim_delay_ms(uint16_t delay_ms)
