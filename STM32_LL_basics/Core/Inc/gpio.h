@@ -39,7 +39,8 @@ extern "C" {
 void MX_GPIO_Init(void);
 
 /* USER CODE BEGIN Prototypes */
-
+void gpio_irq_callback(uint32_t ExtiLine);
+void gpio_init(void);
 /* USER CODE END Prototypes */
 
 #ifdef __cplusplus

@@ -24,6 +24,7 @@
 /* USER CODE BEGIN Includes */
 #include "usart.h"
 #include "tim.h"
+#include "gpio.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -154,7 +155,7 @@ void EXTI4_15_IRQHandler(void)
   {
     LL_EXTI_ClearFlag_0_31(LL_EXTI_LINE_13);
     /* USER CODE BEGIN LL_EXTI_LINE_13 */
-
+    gpio_irq_callback(LL_EXTI_LINE_13);
     /* USER CODE END LL_EXTI_LINE_13 */
   }
   /* USER CODE BEGIN EXTI4_15_IRQn 1 */

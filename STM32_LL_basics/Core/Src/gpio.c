@@ -22,7 +22,8 @@
 #include "gpio.h"
 
 /* USER CODE BEGIN 0 */
-
+#include <stdio.h>
+#include "tim.h"
 /* USER CODE END 0 */
 
 /*----------------------------------------------------------------------------*/
@@ -72,5 +73,17 @@ void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 2 */
+void gpio_init(void)
+{
+  LL_EXTI_EnableIT_0_31(LL_EXTI_LINE_13);
+}
 
+
+void gpio_irq_callback(uint32_t ExtiLine)
+{
+  if (ExtiLine == LL_EXTI_LINE_13)
+  {
+    tim_set_duty();
+  }
+}
 /* USER CODE END 2 */

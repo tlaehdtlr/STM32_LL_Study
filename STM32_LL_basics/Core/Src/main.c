@@ -94,6 +94,7 @@ int main(void)
   /* USER CODE BEGIN 2 */
   uart_init();
   tim_init();
+  gpio_init();
   /* USER CODE END 2 */
 
   /* Infinite loop */

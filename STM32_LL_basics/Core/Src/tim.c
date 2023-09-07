@@ -114,6 +114,16 @@ void MX_TIM6_Init(void)
 
 /* USER CODE BEGIN 1 */
 
+static volatile uint8_t duty = 0;
+void tim_set_duty(void)
+{
+  if (duty++ >= 5)
+  {
+    duty = 0;
+  }
+  LL_TIM_OC_SetCompareCH1(TIM2, 200*duty);
+}
+
 void tim_init(void)
 {
   LL_TIM_EnableIT_UPDATE(TIM6);
