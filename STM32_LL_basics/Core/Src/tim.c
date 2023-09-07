@@ -21,7 +21,8 @@
 #include "tim.h"
 
 /* USER CODE BEGIN 0 */
-
+#include <stdio.h>
+static volatile uint16_t delay_time = 0;
 /* USER CODE END 0 */
 
 /* TIM2 init function */
@@ -113,4 +114,24 @@ void MX_TIM6_Init(void)
 
 /* USER CODE BEGIN 1 */
 
+void tim_init(void)
+{
+  LL_TIM_EnableIT_UPDATE(TIM6);
+  LL_TIM_EnableCounter(TIM6);
+}
+
+void tim_delay_ms(uint16_t delay_ms)
+{
+  delay_time = 0;
+  while (delay_ms > delay_time);
+}
+
+void tim_irq_callback(TIM_TypeDef *TIMx)
+{
+  if (TIMx == TIM6)
+  {
+    // 1ms
+    delay_time++;
+  }
+}
 /* USER CODE END 1 */

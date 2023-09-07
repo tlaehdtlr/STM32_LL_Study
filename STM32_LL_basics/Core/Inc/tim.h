@@ -40,7 +40,9 @@ void MX_TIM2_Init(void);
 void MX_TIM6_Init(void);
 
 /* USER CODE BEGIN Prototypes */
-
+void tim_init(void);
+void tim_delay_ms(uint16_t delay_ms);
+void tim_irq_callback(TIM_TypeDef *TIMx);
 /* USER CODE END Prototypes */
 
 #ifdef __cplusplus

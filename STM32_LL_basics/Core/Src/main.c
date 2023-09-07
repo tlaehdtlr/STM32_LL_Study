@@ -93,18 +93,20 @@ int main(void)
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
   uart_init();
-
+  tim_init();
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   printf("===== This is LL basic =====\r\n");
+  uint16_t time_delay = 0;
   while (1)
   {
 	  uart_idle();
     /* USER CODE END WHILE */
-
     /* USER CODE BEGIN 3 */
+    printf("time %d s \r\n", time_delay++);
+    tim_delay_ms(1000);
   }
   /* USER CODE END 3 */
 }
