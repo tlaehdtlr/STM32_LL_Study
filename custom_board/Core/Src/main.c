@@ -18,6 +18,7 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "usart.h"
 #include "gpio.h"
 
 /* Private includes ----------------------------------------------------------*/
@@ -37,7 +38,6 @@
 
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
-
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
@@ -49,13 +49,15 @@
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
-
+static void debug_uart_transmit(USART_TypeDef *USARTx, uint8_t value);
+static void debug_uart_receive(USART_TypeDef *USARTx);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 volatile bool flag = false;
 volatile uint32_t cnt = 0;
+volatile uint8_t uart_receive_data = 0;
 /* USER CODE END 0 */
 
 /**
@@ -90,6 +92,7 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_USART3_UART_Init();
   /* USER CODE BEGIN 2 */
 
   /* USER CODE END 2 */
@@ -99,21 +102,25 @@ int main(void)
   LL_GPIO_SetOutputPin(LED_1_GPIO_Port, LED_1_Pin);
   while (1)
   {
-    while (cnt++ < 2400000)
+    debug_uart_receive(USART3);
+    if (cnt++ > 2400000)
     {
-      ;
-    }
-    cnt = 0;
-    flag = !flag;
-    if (flag)
-    {
-      LL_GPIO_ResetOutputPin(LED_2_GPIO_Port, LED_2_Pin);
-      LL_GPIO_SetOutputPin(LED_3_GPIO_Port, LED_3_Pin);
-    }
-    else
-    {
-      LL_GPIO_SetOutputPin(LED_2_GPIO_Port, LED_2_Pin);
-      LL_GPIO_ResetOutputPin(LED_3_GPIO_Port, LED_3_Pin);
+      cnt = 0;
+      flag = !flag;
+      if (flag)
+      {
+        debug_uart_transmit(USART3, 'H');
+        debug_uart_transmit(USART3, 'i');
+        debug_uart_transmit(USART3, '\r');
+        debug_uart_transmit(USART3, '\n');
+        LL_GPIO_ResetOutputPin(LED_2_GPIO_Port, LED_2_Pin);
+        LL_GPIO_SetOutputPin(LED_3_GPIO_Port, LED_3_Pin);
+      }
+      else
+      {
+        LL_GPIO_SetOutputPin(LED_2_GPIO_Port, LED_2_Pin);
+        LL_GPIO_ResetOutputPin(LED_3_GPIO_Port, LED_3_Pin);
+      }
     }
     /* USER CODE END WHILE */
 
@@ -158,10 +165,50 @@ void SystemClock_Config(void)
   }
   LL_Init1msTick(48000000);
   LL_SetSystemCoreClock(48000000);
+  LL_RCC_SetUSARTClockSource(LL_RCC_USART3_CLKSOURCE_PCLK1);
 }
 
 /* USER CODE BEGIN 4 */
+static void debug_uart_transmit(USART_TypeDef *USARTx, uint8_t value)
+{
+  while (!LL_USART_IsActiveFlag_TXE(USARTx))
+  {
+  }
 
+  /* Write character in Transmit Data register.
+     TXE flag is cleared by writing data in TDR register */
+  LL_USART_TransmitData8(USARTx, value);
+
+  /* Wait for TC flag to be raised for last char */
+  while (!LL_USART_IsActiveFlag_TC(USARTx))
+  {
+  }
+}
+
+static void debug_uart_receive(USART_TypeDef *USARTx)
+{
+  if (LL_USART_IsActiveFlag_RXNE(USARTx))
+  {
+    uart_receive_data = LL_USART_ReceiveData8(USARTx);
+  }
+
+  switch (uart_receive_data)
+  {
+    case 0: return;
+    case '1':
+    {
+      LL_GPIO_SetOutputPin(LED_1_GPIO_Port, LED_1_Pin);
+    }
+      break;
+    case '2':
+    {
+      LL_GPIO_ResetOutputPin(LED_1_GPIO_Port, LED_1_Pin);
+    }
+      break;
+    default:
+      break;
+  }
+}
 /* USER CODE END 4 */
 
 /**
