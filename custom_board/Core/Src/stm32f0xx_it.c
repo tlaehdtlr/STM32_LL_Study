@@ -140,6 +140,35 @@ void SysTick_Handler(void)
 /* please refer to the startup file (startup_stm32f0xx.s).                    */
 /******************************************************************************/
 
+/**
+  * @brief This function handles USART3 to USART8 global interrupts / USART3 wake-up interrupt through EXTI line 28.
+  */
+void USART3_8_IRQHandler(void)
+{
+  /* USER CODE BEGIN USART3_8_IRQn 0 */
+  if (LL_USART_IsActiveFlag_RXNE(USART3) && LL_USART_IsEnabledIT_RXNE(USART3))
+  {
+    debug_uart_receive(USART3);
+  }
+
+  if(LL_USART_IsEnabledIT_TXE(USART3) && LL_USART_IsActiveFlag_TXE(USART3))
+  {
+    /* TXE flag will be automatically cleared when writing new data in TDR register */
+
+    /* Call function in charge of handling empty DR => will lead to transmission of next character */
+    uart_transmit_callback(USART3);
+  }
+  /* USER CODE END USART3_8_IRQn 0 */
+
+  /* USER CODE BEGIN USART3_8_IRQn 1 */
+  if(LL_USART_IsEnabledIT_ERROR(USART3) && LL_USART_IsActiveFlag_NE(USART3))
+  {
+    /* Call Error function */
+    UART_Error_Callback();
+  }
+  /* USER CODE END USART3_8_IRQn 1 */
+}
+
 /* USER CODE BEGIN 1 */
 
 /* USER CODE END 1 */

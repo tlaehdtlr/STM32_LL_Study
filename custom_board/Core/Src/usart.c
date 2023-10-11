@@ -61,6 +61,10 @@ void MX_USART3_UART_Init(void)
   GPIO_InitStruct.Alternate = LL_GPIO_AF_1;
   LL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
+  /* USART3 interrupt Init */
+  NVIC_SetPriority(USART3_8_IRQn, 0);
+  NVIC_EnableIRQ(USART3_8_IRQn);
+
   /* USER CODE BEGIN USART3_Init 1 */
 
   /* USER CODE END USART3_Init 1 */
@@ -77,6 +81,9 @@ void MX_USART3_UART_Init(void)
   LL_USART_Enable(USART3);
   /* USER CODE BEGIN USART3_Init 2 */
 
+  LL_USART_EnableIT_RXNE(USART3);
+  LL_USART_EnableIT_ERROR(USART3);
+  LL_USART_EnableIT_TXE(USART3);
   /* USER CODE END USART3_Init 2 */
 
 }
