@@ -18,6 +18,7 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "tim.h"
 #include "usart.h"
 #include "gpio.h"
 
@@ -34,8 +35,9 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define BLINKING_FAST   1200000
-#define BLINKING_SLOW   4800000
+#define BLINKING_OFFSET 10
+#define BLINKING_FAST   (200 + BLINKING_OFFSET)
+#define BLINKING_SLOW   (2000 + BLINKING_OFFSET)
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -73,10 +75,10 @@ int fputc(int ch, FILE *f)
 
 /* USER CODE BEGIN PV */
 volatile bool flag = false;
-volatile uint32_t cnt = 0;
+volatile uint32_t tim_cnt = 0;
 volatile uint8_t uart_receive_data = 0;
 volatile uint32_t blinking_period = BLINKING_SLOW;
-volatile uint32_t blinking_cnt = 100;
+volatile uint32_t blinking_cnt = BLINKING_OFFSET;
 
 uint8_t greeting[] = "\r\nHello \r\n";
 uint8_t new_line[] = "\r\n";
@@ -130,6 +132,7 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_USART3_UART_Init();
+  MX_TIM6_Init();
   /* USER CODE BEGIN 2 */
 
   /* USER CODE END 2 */
@@ -141,14 +144,14 @@ int main(void)
   printf("\r\nHello, this is a custom board LL example \r\n");
   while (1)
   {
-    if (blinking_cnt++ - 100 > blinking_period)
+    if (blinking_cnt - BLINKING_OFFSET > blinking_period)
     {
-      blinking_cnt = 100;
+      blinking_cnt = BLINKING_OFFSET;
       LL_GPIO_TogglePin(LED_1_GPIO_Port, LED_1_Pin);
     }
-    if (cnt++ > 2400000)
+    if (tim_cnt > 500)
     {
-      cnt = 0;
+      tim_cnt = 0;
       flag = !flag;
       if (flag)
       {
@@ -206,6 +209,15 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
+void timer6_callback(void)
+{
+  tim_cnt++;
+  blinking_cnt++;
+}
+
+
+
+
 #if 1
 void uart_transmit_it(USART_TypeDef *USARTx, uint8_t *p_value, uint16_t size)
 {
@@ -286,6 +298,11 @@ void debug_uart_receive(USART_TypeDef *USARTx)
     case 'T':
     {
       uart_transmit_it(USARTx, greeting, sizeof(greeting));
+    }
+      break;
+    case 'R':
+    {
+      LL_GPIO_TogglePin(LED_2_GPIO_Port, LED_2_Pin);
     }
       break;
     case '\r':
