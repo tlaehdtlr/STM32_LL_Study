@@ -20,6 +20,7 @@
 #include "main.h"
 #include "tim.h"
 #include "usart.h"
+#include "wwdg.h"
 #include "gpio.h"
 
 /* Private includes ----------------------------------------------------------*/
@@ -38,6 +39,7 @@
 #define BLINKING_OFFSET 10
 #define BLINKING_FAST   (200 + BLINKING_OFFSET)
 #define BLINKING_SLOW   (2000 + BLINKING_OFFSET)
+#define WDT_TIMEOUT     30  // 30ms
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -79,6 +81,7 @@ volatile uint32_t tim_cnt = 0;
 volatile uint8_t uart_receive_data = 0;
 volatile uint32_t blinking_period = BLINKING_SLOW;
 volatile uint32_t blinking_cnt = BLINKING_OFFSET;
+volatile uint16_t wdt_cnt = 0;
 
 uint8_t greeting[] = "\r\nHello \r\n";
 uint8_t new_line[] = "\r\n";
@@ -133,14 +136,22 @@ int main(void)
   MX_GPIO_Init();
   MX_USART3_UART_Init();
   MX_TIM6_Init();
+  MX_WWDG_Init();
   /* USER CODE BEGIN 2 */
+  LL_USART_EnableIT_TXE(USART3);
+  LL_GPIO_ResetOutputPin(LED_1_GPIO_Port, LED_1_Pin);
+
+  if (LL_RCC_IsActiveFlag_WWDGRST())
+  {
+    /* clear WWDG reset flag */
+    LL_RCC_ClearResetFlags();
+    printf("WDT reset \r\n");
+  }
 
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  LL_USART_EnableIT_TXE(USART3);
-  LL_GPIO_ResetOutputPin(LED_1_GPIO_Port, LED_1_Pin);
   printf("\r\nHello, this is a custom board LL example \r\n");
   while (1)
   {
@@ -165,6 +176,11 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+    if (wdt_cnt >= WDT_TIMEOUT)
+    {
+      wdt_cnt = 0;
+      LL_WWDG_SetCounter(WWDG, 120);
+    }
   }
   /* USER CODE END 3 */
 }
@@ -213,6 +229,7 @@ void timer6_callback(void)
 {
   tim_cnt++;
   blinking_cnt++;
+  wdt_cnt++;
 }
 
 
@@ -303,6 +320,12 @@ void debug_uart_receive(USART_TypeDef *USARTx)
     case 'R':
     {
       LL_GPIO_TogglePin(LED_2_GPIO_Port, LED_2_Pin);
+    }
+      break;
+    case 'F':
+    {
+      printf("infinite loop \r\n");
+      while (1);
     }
       break;
     case '\r':
