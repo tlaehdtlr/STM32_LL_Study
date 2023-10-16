@@ -19,8 +19,9 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "tim.h"
-
 /* USER CODE BEGIN 0 */
+
+volatile uint16_t timer6_cnt = 0;
 
 /* USER CODE END 0 */
 
@@ -55,7 +56,11 @@ void MX_TIM6_Init(void)
     Error_Handler();
   }
   /* USER CODE BEGIN TIM6_Init 2 */
-
+  if (HAL_TIM_Base_Start_IT(&htim6) != HAL_OK)
+  {
+    /* Starting Error */
+    Error_Handler();
+  }
   /* USER CODE END TIM6_Init 2 */
 
 }
@@ -100,5 +105,22 @@ void HAL_TIM_Base_MspDeInit(TIM_HandleTypeDef* tim_baseHandle)
 }
 
 /* USER CODE BEGIN 1 */
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+{
+  if(htim->Instance == TIM6)
+  {
+    timer6_cnt++;
+  }
+}
 
+bool tim_check(uint16_t timeout)
+{
+  if (timer6_cnt > timeout)
+  {
+    timer6_cnt = 0;
+    return true;
+  }
+
+  return false;
+}
 /* USER CODE END 1 */

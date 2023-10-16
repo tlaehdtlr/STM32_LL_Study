@@ -29,7 +29,7 @@ extern "C" {
 #include "main.h"
 
 /* USER CODE BEGIN Includes */
-
+#include <stdbool.h>
 /* USER CODE END Includes */
 
 extern TIM_HandleTypeDef htim6;
@@ -41,7 +41,7 @@ extern TIM_HandleTypeDef htim6;
 void MX_TIM6_Init(void);
 
 /* USER CODE BEGIN Prototypes */
-
+bool tim_check(uint16_t timeout);
 /* USER CODE END Prototypes */
 
 #ifdef __cplusplus

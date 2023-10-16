@@ -19,8 +19,11 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "usart.h"
-
+#include <stdio.h>
 /* USER CODE BEGIN 0 */
+
+uint8_t uart_received_data[32];
+uint8_t new_line[] = "\r\n";
 
 /* USER CODE END 0 */
 
@@ -53,6 +56,7 @@ void MX_USART3_UART_Init(void)
     Error_Handler();
   }
   /* USER CODE BEGIN USART3_Init 2 */
+  HAL_UART_Receive_IT(&huart3, uart_received_data, 1);
 
   /* USER CODE END USART3_Init 2 */
 
@@ -117,5 +121,16 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef* uartHandle)
 }
 
 /* USER CODE BEGIN 1 */
-
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
+{
+  if (uart_received_data[0] == '\r' || uart_received_data[0] == '\n')
+  {
+    HAL_UART_Transmit_IT(&huart3, new_line, sizeof(new_line));
+  }
+  else
+  {
+    HAL_UART_Transmit_IT(&huart3, uart_received_data, 1);
+  }
+  HAL_UART_Receive_IT(&huart3, uart_received_data, 1);
+}
 /* USER CODE END 1 */
