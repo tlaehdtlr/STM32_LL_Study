@@ -29,7 +29,8 @@ extern "C" {
 #include "main.h"
 
 /* USER CODE BEGIN Includes */
-
+#include <stdio.h>
+#include <stdbool.h>
 /* USER CODE END Includes */
 
 extern CAN_HandleTypeDef hcan;
@@ -41,7 +42,9 @@ extern CAN_HandleTypeDef hcan;
 void MX_CAN_Init(void);
 
 /* USER CODE BEGIN Prototypes */
-
+void can_tx_start(void);
+void can_tx_check(void);
+void can_rx_check(void);
 /* USER CODE END Prototypes */
 
 #ifdef __cplusplus

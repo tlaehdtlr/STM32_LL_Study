@@ -153,6 +153,11 @@ int main(void)
   printf("\r\nHello, this is a custom board LL example \r\n");
   while (1)
   {
+
+    can_rx_check();
+    can_tx_check();
+
+
     if (blinking_cnt - BLINKING_OFFSET > blinking_period)
     {
       blinking_cnt = BLINKING_OFFSET;
@@ -329,6 +334,12 @@ void debug_uart_receive(USART_TypeDef *USARTx)
     {
       printf("infinite loop \r\n");
       while (1);
+    }
+      break;
+    case 'S':
+    {
+      printf("CAN start \r\n");
+      can_tx_start();
     }
       break;
     case '\r':
