@@ -18,6 +18,7 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "can.h"
 #include "tim.h"
 #include "usart.h"
 #include "wwdg.h"
@@ -115,11 +116,7 @@ int main(void)
   /* MCU Configuration--------------------------------------------------------*/
 
   /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
-  LL_APB1_GRP2_EnableClock(LL_APB1_GRP2_PERIPH_SYSCFG);
-  LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_PWR);
-
-  /* SysTick_IRQn interrupt configuration */
-  NVIC_SetPriority(SysTick_IRQn, 3);
+  HAL_Init();
 
   /* USER CODE BEGIN Init */
 
@@ -137,6 +134,7 @@ int main(void)
   MX_USART3_UART_Init();
   MX_TIM6_Init();
   MX_WWDG_Init();
+  MX_CAN_Init();
   /* USER CODE BEGIN 2 */
   LL_USART_EnableIT_TXE(USART3);
   LL_GPIO_ResetOutputPin(LED_1_GPIO_Port, LED_1_Pin);
@@ -219,8 +217,13 @@ void SystemClock_Config(void)
   {
 
   }
-  LL_Init1msTick(48000000);
   LL_SetSystemCoreClock(48000000);
+
+   /* Update the time base */
+  if (HAL_InitTick (TICK_INT_PRIORITY) != HAL_OK)
+  {
+    Error_Handler();
+  }
   LL_RCC_SetUSARTClockSource(LL_RCC_USART3_CLKSOURCE_PCLK1);
 }
 
