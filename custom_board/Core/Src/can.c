@@ -22,6 +22,10 @@
 
 /* USER CODE BEGIN 0 */
 
+static void can_tx_check(void);
+static void can_rx_check(void);
+
+
 CAN_FilterTypeDef can_filter;
 CAN_RxHeaderTypeDef can_rx_header;
 CAN_TxHeaderTypeDef can_tx_header;
@@ -187,7 +191,7 @@ void can_tx_start(void)
   printf("mailbox : %ld \r\n", can_tx_mailbox);
 }
 
-void can_tx_check(void)
+static void can_tx_check(void)
 {
   if (can_tx_flag)
   {
@@ -206,7 +210,7 @@ void can_tx_check(void)
 
 }
 
-void can_rx_check(void)
+static void can_rx_check(void)
 {
   if (can_rx_flag)
   {
@@ -228,6 +232,11 @@ void can_rx_check(void)
 
 }
 
+void can_idle(void)
+{
+  can_rx_check();
+  can_tx_check();
+}
 
 void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
 {

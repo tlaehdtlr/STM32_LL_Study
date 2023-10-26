@@ -154,11 +154,7 @@ void uart_idle(void)
 {
   if (rx_idx != read_idx)
   {
-    // printf("%c", uart_rx_buf[read_idx++]);
-    LL_GPIO_TogglePin(LED_2_GPIO_Port, LED_2_Pin);
-    uart_transmit_it(USART3, &uart_rx_buf[read_idx++ & (UART_BUF_SIZE-1)], 1);
-    // printf("rx idx %d, read idx %d \r\n", rx_idx, read_idx);
-    // cli_read_character(uart_rx_buf[read_idx++ & (UART_BUF_SIZE-1)]);
+    cli_read_character(uart_rx_buf[read_idx++ & (UART_BUF_SIZE-1)]);
   }
 
 

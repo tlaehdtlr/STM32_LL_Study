@@ -47,17 +47,15 @@ void timer_control_blinking_led_set(bool fast)
         blinking_period = BLINKING_SLOW;
     }
 }
-uint8_t arr[10] = {1,3,5,7,8,};
+
 static void timer_control_check_blinking_led(void)
 {
   if (blinking_cnt - BLINKING_OFFSET > blinking_period)
   {
     blinking_cnt = BLINKING_OFFSET;
     LL_GPIO_TogglePin(LED_1_GPIO_Port, LED_1_Pin);
-    // uart_transmit_it(USART3, arr, sizeof(arr));
   }
 }
-
 
 static void timer_control_wdt(void)
 {

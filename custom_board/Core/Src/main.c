@@ -100,20 +100,18 @@ int main(void)
     /* clear WWDG reset flag */
     LL_RCC_ClearResetFlags();
     LL_GPIO_SetOutputPin(LED_3_GPIO_Port, LED_3_Pin);
-    // printf("WDT reset \r\n");
+    printf("WDT reset \r\n");
   }
 
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  // setbuf(stdout, NULL);
+  setbuf(stdout, NULL);
   printf("\r\nHello, this is a custom board LL example \r\n");
   while (1)
   {
-
-    // can_rx_check();
-    // can_tx_check();
+    can_idle();
     timer_control_idle();
     uart_idle();
     /* USER CODE END WHILE */

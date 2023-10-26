@@ -43,8 +43,7 @@ void MX_CAN_Init(void);
 
 /* USER CODE BEGIN Prototypes */
 void can_tx_start(void);
-void can_tx_check(void);
-void can_rx_check(void);
+void can_idle(void);
 /* USER CODE END Prototypes */
 
 #ifdef __cplusplus

@@ -33,9 +33,7 @@ void cli_read_character(uint8_t ch)
     if ((ch >= ' ') && (ch <= '~'))
     {
         cli_rx_buf[cli_rx_idx++ & (CMD_BUF_SIZE - 1)] = ch;
-        // printf("%c ", ch);
-        LL_USART_TransmitData8(USART3, ch);
-        // uart_transmit_it(USART3, &ch, 1);
+        printf("%c", ch);
     }
 
     if ((ch == '\b') && cli_rx_idx>0)
@@ -53,10 +51,10 @@ void cli_read_character(uint8_t ch)
     if ((ch == '\r') || (ch == '\n'))
     {
         printf("\r\n");
-        // if (cli_rx_idx > 1)
-        // {
-        //     cli_process_command();
-        // }
+        if (cli_rx_idx > 1)
+        {
+            cli_process_command();
+        }
         cli_rx_idx = 0;
         printf(CLI_PROMPT);
     }
