@@ -40,6 +40,14 @@ void MX_USART3_UART_Init(void);
 
 /* USER CODE BEGIN Prototypes */
 
+void uart_transmit_it(USART_TypeDef *USARTx, uint8_t *p_value, uint16_t size);
+void uart_txe_callback(USART_TypeDef *USARTx);
+void uart_tc_callback(USART_TypeDef *USARTx);
+
+void uart_idle(void);
+void uart_receive_callback(USART_TypeDef *USARTx);
+void UART_Error_Callback(void);
+
 /* USER CODE END Prototypes */
 
 #ifdef __cplusplus

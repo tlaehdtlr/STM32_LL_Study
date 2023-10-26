@@ -67,11 +67,6 @@ extern "C" {
 void Error_Handler(void);
 
 /* USER CODE BEGIN EFP */
-void timer6_callback(void);
-void uart_transmit_it(USART_TypeDef *USARTx, uint8_t *p_value, uint16_t size);
-void uart_transmit_callback(USART_TypeDef *USARTx);
-void debug_uart_receive(USART_TypeDef *USARTx);
-void UART_Error_Callback(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/

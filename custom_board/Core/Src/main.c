@@ -28,6 +28,9 @@
 /* USER CODE BEGIN Includes */
 #include <stdio.h>
 #include <stdbool.h>
+#include "can.h"
+#include "timer_control.h"
+#include "usart.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -37,66 +40,20 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define BLINKING_OFFSET 10
-#define BLINKING_FAST   (200 + BLINKING_OFFSET)
-#define BLINKING_SLOW   (2000 + BLINKING_OFFSET)
-#define WDT_TIMEOUT     30  // 30ms
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
-#ifdef __GNUC__
-/* With GCC, small printf (option LD Linker->Libraries->Small printf
-   set to 'Yes') calls __io_putchar() */
-int __io_putchar(int ch)
-#else
-int fputc(int ch, FILE *f)
-#endif /* __GNUC__ */
-{
-  /* Place your implementation of fputc here */
-  /* e.g. write a character to the EVAL_COM1 and Loop until the end of transmission */
-
-  /* Wait for TXE flag to be raised */
-  while (!LL_USART_IsActiveFlag_TXE(USART3))
-  {
-  }
-
-  /* Write character in Transmit Data register.
-     TXE flag is cleared by writing data in TDR register */
-  LL_USART_TransmitData8(USART3, ch);
-
-  /* Wait for TC flag to be raised for last char */
-  while (!LL_USART_IsActiveFlag_TC(USART3))
-  {
-  }
-  
-  return ch;
-}
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-volatile bool flag = false;
-volatile uint32_t tim_cnt = 0;
-volatile uint8_t uart_receive_data = 0;
-volatile uint32_t blinking_period = BLINKING_SLOW;
-volatile uint32_t blinking_cnt = BLINKING_OFFSET;
-volatile uint16_t wdt_cnt = 0;
-
-uint8_t greeting[] = "\r\nHello \r\n";
-uint8_t new_line[] = "\r\n";
-uint8_t *p_tx;
-volatile uint16_t tx_idx = 0;
-volatile uint16_t tx_size = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
-#if 0
-static void debug_uart_transmit(USART_TypeDef *USARTx, uint8_t value);
-#endif
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -136,54 +93,32 @@ int main(void)
   MX_WWDG_Init();
   MX_CAN_Init();
   /* USER CODE BEGIN 2 */
-  LL_USART_EnableIT_TXE(USART3);
-  LL_GPIO_ResetOutputPin(LED_1_GPIO_Port, LED_1_Pin);
+  LL_GPIO_SetOutputPin(LED_2_GPIO_Port, LED_2_Pin);
 
   if (LL_RCC_IsActiveFlag_WWDGRST())
   {
     /* clear WWDG reset flag */
     LL_RCC_ClearResetFlags();
-    printf("WDT reset \r\n");
+    LL_GPIO_SetOutputPin(LED_3_GPIO_Port, LED_3_Pin);
+    // printf("WDT reset \r\n");
   }
 
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+  // setbuf(stdout, NULL);
   printf("\r\nHello, this is a custom board LL example \r\n");
   while (1)
   {
 
-    can_rx_check();
-    can_tx_check();
-
-
-    if (blinking_cnt - BLINKING_OFFSET > blinking_period)
-    {
-      blinking_cnt = BLINKING_OFFSET;
-      LL_GPIO_TogglePin(LED_1_GPIO_Port, LED_1_Pin);
-    }
-    if (tim_cnt > 500)
-    {
-      tim_cnt = 0;
-      flag = !flag;
-      if (flag)
-      {
-        LL_GPIO_SetOutputPin(LED_3_GPIO_Port, LED_3_Pin);
-      }
-      else
-      {
-        LL_GPIO_ResetOutputPin(LED_3_GPIO_Port, LED_3_Pin);
-      }
-    }
+    // can_rx_check();
+    // can_tx_check();
+    timer_control_idle();
+    uart_idle();
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-    if (wdt_cnt >= WDT_TIMEOUT)
-    {
-      wdt_cnt = 0;
-      LL_WWDG_SetCounter(WWDG, 120);
-    }
   }
   /* USER CODE END 3 */
 }
@@ -233,151 +168,7 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
-void timer6_callback(void)
-{
-  tim_cnt++;
-  blinking_cnt++;
-  wdt_cnt++;
-}
 
-
-
-
-#if 1
-void uart_transmit_it(USART_TypeDef *USARTx, uint8_t *p_value, uint16_t size)
-{
-  tx_size = size;
-  p_tx = p_value;
-  LL_USART_TransmitData8(USARTx, p_tx[tx_idx++]);
-  LL_USART_EnableIT_TXE(USARTx);
-}
-
-void uart_transmit_callback(USART_TypeDef *USARTx)
-{
-  if (tx_idx == tx_size)
-  {
-    tx_idx = 0;
-    tx_size = 0;
-    LL_USART_DisableIT_TXE(USARTx);
-  }
-  else
-  {
-    LL_USART_TransmitData8(USARTx, p_tx[tx_idx++]);
-  }
-}
-
-#else
-static void debug_uart_transmit(USART_TypeDef *USARTx, uint8_t value)
-{
-  while (!LL_USART_IsActiveFlag_TXE(USARTx))
-  {
-  }
-
-  /* Write character in Transmit Data register.
-     TXE flag is cleared by writing data in TDR register */
-  LL_USART_TransmitData8(USARTx, value);
-
-  /* Wait for TC flag to be raised for last char */
-  while (!LL_USART_IsActiveFlag_TC(USARTx))
-  {
-  }
-}
-#endif
-
-void debug_uart_receive(USART_TypeDef *USARTx)
-{
-  uart_receive_data = LL_USART_ReceiveData8(USARTx);
-#if 1
-  uart_transmit_it(USARTx, &uart_receive_data, 1);
-#else
-  debug_uart_transmit(USARTx, uart_receive_data);
-#endif
-  switch (uart_receive_data)
-  {
-    case 0: return;
-    case '1':
-    {
-      LL_GPIO_SetOutputPin(LED_1_GPIO_Port, LED_1_Pin);
-    }
-      break;
-    case '2':
-    {
-      LL_GPIO_ResetOutputPin(LED_1_GPIO_Port, LED_1_Pin);
-    }
-      break;
-    case '3':
-    {
-      blinking_period = BLINKING_SLOW;
-    }
-      break;
-    case '4':
-    {
-      blinking_period = BLINKING_FAST;
-    }
-      break;
-    case '5':
-    {
-      blinking_period = 0xFFFFFFFF;
-    }
-      break;
-    case 'T':
-    {
-      uart_transmit_it(USARTx, greeting, sizeof(greeting));
-    }
-      break;
-    case 'R':
-    {
-      LL_GPIO_TogglePin(LED_2_GPIO_Port, LED_2_Pin);
-    }
-      break;
-    case 'F':
-    {
-      printf("infinite loop \r\n");
-      while (1);
-    }
-      break;
-    case 'S':
-    {
-      printf("CAN start \r\n");
-      can_tx_start();
-    }
-      break;
-    case '\r':
-    case '\n':
-    {
-      uart_transmit_it(USARTx, new_line, sizeof(new_line));
-    }
-      break;
-    default:
-      break;
-  }
-}
-
-/* */
-void UART_Error_Callback(void)
-{
-  __IO uint32_t isr_reg;
-
-  /* Disable USARTx_IRQn */
-  NVIC_DisableIRQ(USART3_8_IRQn);
-  
-  /* Error handling example :
-    - Read USART ISR register to identify flag that leads to IT raising
-    - Perform corresponding error handling treatment according to flag
-  */
-  isr_reg = LL_USART_ReadReg(USART3, ISR);
-  if (isr_reg & LL_USART_ISR_NE)
-  {
-    /* Transfer error in reception/transmission process */
-    blinking_period = BLINKING_FAST;
-  }
-  else
-  {
-    /* Turn LED2 on: Transfer error in reception/transmission process */
-    blinking_period = 0xFFFFFFFF; // never
-    LL_GPIO_SetOutputPin(LED_1_GPIO_Port, LED_1_Pin);
-  }
-}
 /* USER CODE END 4 */
 
 /**

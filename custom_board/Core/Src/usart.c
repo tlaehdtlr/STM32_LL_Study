@@ -21,6 +21,34 @@
 #include "usart.h"
 
 /* USER CODE BEGIN 0 */
+#include <stdio.h>
+#include <string.h>
+#include "cli.h"
+
+int _write(int file, char *ptr, int len)
+{
+  uart_transmit_it(USART3, (uint8_t*)ptr, len);
+  return len;
+}
+
+
+#define UART_BUF_SIZE   256
+#define UART_TX_Q_SIZE  32
+
+uint8_t uart_tx_buf[UART_BUF_SIZE];
+volatile uint16_t tx_w_idx = 0;
+volatile uint16_t tx_r_idx = 0;
+
+uint8_t uart_tx_que[UART_TX_Q_SIZE];
+volatile uint8_t tx_que_w_idx = 0;
+volatile uint8_t tx_que_r_idx = 0;
+
+volatile bool tx_completed = true;
+volatile uint16_t tx_size = 0;
+
+uint8_t uart_rx_buf[UART_BUF_SIZE];
+volatile uint16_t rx_idx = 0;
+volatile uint16_t read_idx = 0;
 
 /* USER CODE END 0 */
 
@@ -81,13 +109,98 @@ void MX_USART3_UART_Init(void)
   LL_USART_Enable(USART3);
   /* USER CODE BEGIN USART3_Init 2 */
 
+  LL_USART_ClearFlag_ORE(USART3);
   LL_USART_EnableIT_RXNE(USART3);
   LL_USART_EnableIT_ERROR(USART3);
-  LL_USART_EnableIT_TXE(USART3);
+
   /* USER CODE END USART3_Init 2 */
 
 }
 
 /* USER CODE BEGIN 1 */
+
+/**
+ * If Queue is not empty, override previous component
+*/
+void uart_transmit_it(USART_TypeDef *USARTx, uint8_t *p_value, uint16_t size)
+{
+  for (uint8_t idx = 0; idx < size; idx++)
+  {
+    uart_tx_buf[(tx_w_idx + idx) & (UART_BUF_SIZE-1) ] = *(p_value++);
+  }
+  tx_w_idx += size;
+  uart_tx_que[tx_que_w_idx++ & (UART_TX_Q_SIZE-1)] = size;
+}
+
+void uart_txe_callback(USART_TypeDef *USARTx)
+{
+  if (tx_size == 1)
+  {
+    /* last byte */
+    LL_USART_DisableIT_TXE(USARTx);
+    LL_USART_EnableIT_TC(USARTx);
+  }
+  tx_size--;
+  LL_USART_TransmitData8(USARTx, uart_tx_buf[tx_r_idx++ & (UART_BUF_SIZE-1)]);
+}
+
+void uart_tc_callback(USART_TypeDef *USARTx)
+{
+  tx_completed = true;
+  LL_USART_DisableIT_TC(USART3);
+}
+
+void uart_idle(void)
+{
+  if (rx_idx != read_idx)
+  {
+    // printf("%c", uart_rx_buf[read_idx++]);
+    LL_GPIO_TogglePin(LED_2_GPIO_Port, LED_2_Pin);
+    uart_transmit_it(USART3, &uart_rx_buf[read_idx++ & (UART_BUF_SIZE-1)], 1);
+    // printf("rx idx %d, read idx %d \r\n", rx_idx, read_idx);
+    // cli_read_character(uart_rx_buf[read_idx++ & (UART_BUF_SIZE-1)]);
+  }
+
+
+  if (tx_completed)
+  {
+    if (tx_que_w_idx != tx_que_r_idx)
+    {
+      tx_size = uart_tx_que[tx_que_r_idx++ & (UART_TX_Q_SIZE - 1)];
+      tx_completed = false;
+      LL_USART_EnableIT_TXE(USART3);
+    }
+  }
+}
+
+void uart_receive_callback(USART_TypeDef *USARTx)
+{
+  uart_rx_buf[rx_idx++ & (UART_BUF_SIZE-1)] = LL_USART_ReceiveData8(USARTx);
+}
+
+void UART_Error_Callback(void)
+{
+  __IO uint32_t isr_reg;
+
+  /* Disable USARTx_IRQn */
+  NVIC_DisableIRQ(USART3_8_IRQn);
+  
+  /* Error handling example :
+    - Read USART ISR register to identify flag that leads to IT raising
+    - Perform corresponding error handling treatment according to flag
+  */
+  isr_reg = LL_USART_ReadReg(USART3, ISR);
+  if (isr_reg & LL_USART_ISR_NE)
+  {
+    /* Transfer error in reception/transmission process */
+  }
+  else
+  {
+    /* Turn LED2 on: Transfer error in reception/transmission process */
+  }
+  LL_GPIO_SetOutputPin(LED_1_GPIO_Port, LED_1_Pin);
+}
+
+
 
 /* USER CODE END 1 */

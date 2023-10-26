@@ -182,7 +182,7 @@ void USART3_8_IRQHandler(void)
   /* USER CODE BEGIN USART3_8_IRQn 0 */
   if (LL_USART_IsActiveFlag_RXNE(USART3) && LL_USART_IsEnabledIT_RXNE(USART3))
   {
-    debug_uart_receive(USART3);
+    uart_receive_callback(USART3);
   }
 
   if(LL_USART_IsEnabledIT_TXE(USART3) && LL_USART_IsActiveFlag_TXE(USART3))
@@ -190,15 +190,25 @@ void USART3_8_IRQHandler(void)
     /* TXE flag will be automatically cleared when writing new data in TDR register */
 
     /* Call function in charge of handling empty DR => will lead to transmission of next character */
-    uart_transmit_callback(USART3);
+    // uart_transmit_callback(USART3);
+    uart_txe_callback(USART3);
   }
+
+  if(LL_USART_IsEnabledIT_TC(USART3) && LL_USART_IsActiveFlag_TC(USART3))
+  {
+    /* Clear TC flag */
+    LL_USART_ClearFlag_TC(USART3);
+    uart_tc_callback(USART3);
+  }
+
   /* USER CODE END USART3_8_IRQn 0 */
 
   /* USER CODE BEGIN USART3_8_IRQn 1 */
+  // if(LL_USART_IsEnabledIT_ERROR(USART3) && LL_USART_IsActiveFlag_NE(USART3))
   if(LL_USART_IsEnabledIT_ERROR(USART3) && LL_USART_IsActiveFlag_NE(USART3))
   {
     /* Call Error function */
-    UART_Error_Callback();
+    // UART_Error_Callback();
   }
   /* USER CODE END USART3_8_IRQn 1 */
 }

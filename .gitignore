@@ -57,6 +57,7 @@ dkms.conf
 
 custom_board/Release/*
 custom_board/Debug/*
+custom_board/build/*
 
 # End of https://www.toptal.com/developers/gitignore/api/c
 dll: dynamic link library
