@@ -95,20 +95,21 @@ int main(void)
   /* USER CODE BEGIN 2 */
   LL_GPIO_SetOutputPin(LED_2_GPIO_Port, LED_2_Pin);
 
+  setbuf(stdout, NULL);
+  printf("\r\nHello, this is a custom board LL example \r\n");
+
   if (LL_RCC_IsActiveFlag_WWDGRST())
   {
     /* clear WWDG reset flag */
     LL_RCC_ClearResetFlags();
     LL_GPIO_SetOutputPin(LED_3_GPIO_Port, LED_3_Pin);
-    printf("WDT reset \r\n");
+    printf("\r\n[Reset Cause] : WDT reset \r\n");
   }
 
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  setbuf(stdout, NULL);
-  printf("\r\nHello, this is a custom board LL example \r\n");
   while (1)
   {
     can_idle();
