@@ -28,5 +28,7 @@ typedef enum
 } debug_reset_cause_e;
 
 void debug_reset_cause(void);
+void debug_log_error(char *file, uint32_t line);
+void debug_show_log(void);
 
 #endif /* __DEBUG_H__ */

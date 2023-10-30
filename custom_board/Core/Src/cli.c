@@ -1,5 +1,6 @@
 #include "cli.h"
 #include "usart.h"
+#include "debug.h"
 
 #define CMD_BUF_SIZE     256
 #define CLI_PROMPT    "\r\n>>> "
@@ -22,6 +23,7 @@ static void cli_process_command(void);
 */
 static void cli_cmd_help(uint8_t argc, char **argv);
 static void cli_cmd_reset(uint8_t argc, char **argv);
+static void cli_cmd_debug(uint8_t argc, char **argv);
 const cli_cmd_t cli_commands[] =
 {
     {
@@ -39,6 +41,13 @@ const cli_cmd_t cli_commands[] =
         \r\t\t  error \r\n \
         \r\t\t  assert \r\n \
         \r\t\t  hard \r\n \
+        "
+    },
+    {
+        "debug",
+        cli_cmd_debug,
+        "usage : debug \r\n \
+        \r\t\t  log \r\n \
         "
     }
 };
@@ -96,6 +105,26 @@ static void cli_cmd_reset(uint8_t argc, char **argv)
         }
     }
 }
+
+static void cli_cmd_debug(uint8_t argc, char **argv)
+{
+    if (argc == 1)
+    {
+        cli_show_command(argv[0]);
+    }
+    else
+    {
+        if (strcmp(argv[1], "log") == 0)
+        {
+            debug_show_log();   
+        }
+        else
+        {
+            cli_show_command(argv[0]);
+        }
+    }
+}
+
 
 static void cli_show_command(char* cmd)
 {

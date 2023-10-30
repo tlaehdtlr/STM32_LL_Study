@@ -97,7 +97,7 @@ int main(void)
   LL_GPIO_SetOutputPin(LED_2_GPIO_Port, LED_2_Pin);
 
   setbuf(stdout, NULL);
-  printf("\r\nHello, this is a custom board LL example \r\n");
+  printf("\r\n===== Hello, this is a custom board LL example =====\r\n");
 
   debug_reset_cause();
 
@@ -193,10 +193,12 @@ void assert_failed(uint8_t *file, uint32_t line)
   /* USER CODE BEGIN 6 */
   /* User can add his own implementation to report the file name and line number,
      ex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
-    printf("Wrong parameters value: file %s on line %ld\r\n", file, line);
+    
+    // printf("Wrong parameters value: file %s on line %ld\r\n", file, line);
+    debug_log_error((char*)file, line);
     while (1)
     {
-      uart_idle();
+      // uart_idle();
     }
   /* USER CODE END 6 */
 }
