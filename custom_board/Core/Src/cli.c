@@ -34,8 +34,11 @@ const cli_cmd_t cli_commands[] =
         "reset",
         cli_cmd_reset,
         "usage : reset \r\n \
-        \r\t\tsw \r\n \
-        \r\t\twdt \r\n \
+        \r\t\t  sw \r\n \
+        \r\t\t  wdt \r\n \
+        \r\t\t  error \r\n \
+        \r\t\t  assert \r\n \
+        \r\t\t  hard \r\n \
         "
     }
 };
@@ -72,6 +75,20 @@ static void cli_cmd_reset(uint8_t argc, char **argv)
         else if (strcmp(argv[1], "wdt") == 0)
         {
             while (1);
+        }
+        else if (strcmp(argv[1], "error") == 0)
+        {
+            Error_Handler();
+        }
+        else if (strcmp(argv[1], "assert") == 0)
+        {
+            assert_param(false);
+        }
+        else if (strcmp(argv[1], "hard") == 0)
+        {
+            printf("hard fault \r\n");
+            uint8_t zero = 1/0;
+            (char)zero;
         }
         else
         {

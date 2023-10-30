@@ -31,6 +31,7 @@
 #include "can.h"
 #include "timer_control.h"
 #include "usart.h"
+#include "debug.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -98,13 +99,7 @@ int main(void)
   setbuf(stdout, NULL);
   printf("\r\nHello, this is a custom board LL example \r\n");
 
-  if (LL_RCC_IsActiveFlag_WWDGRST())
-  {
-    /* clear WWDG reset flag */
-    LL_RCC_ClearResetFlags();
-    LL_GPIO_SetOutputPin(LED_3_GPIO_Port, LED_3_Pin);
-    printf("\r\n[Reset Cause] : WDT reset \r\n");
-  }
+  debug_reset_cause();
 
   /* USER CODE END 2 */
 
@@ -198,6 +193,11 @@ void assert_failed(uint8_t *file, uint32_t line)
   /* USER CODE BEGIN 6 */
   /* User can add his own implementation to report the file name and line number,
      ex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
+    printf("Wrong parameters value: file %s on line %ld\r\n", file, line);
+    while (1)
+    {
+      uart_idle();
+    }
   /* USER CODE END 6 */
 }
 #endif /* USE_FULL_ASSERT */

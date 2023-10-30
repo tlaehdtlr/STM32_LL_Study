@@ -36,6 +36,7 @@ BUILD_DIR = build
 ######################################
 # C sources
 C_SOURCES =  \
+Core/Src/debug.c \
 Core/Src/cli.c \
 Core/Src/timer_control.c \
 Core/Src/main.c \
