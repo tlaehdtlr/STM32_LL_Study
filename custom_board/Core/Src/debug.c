@@ -1,13 +1,12 @@
 #include "debug.h"
+#include "usart.h"
 
 #define DEBUG_ERROR_OCCUR       0x77
+__attribute__((section(".noinit"))) debug_err_log_t error_log;
 
 debug_reset_cause_e reset_cause = DEBUG_RESET_UNKNOWN;
 char *reset_cause_debug;
 
-__attribute__((section(".noinit"))) volatile uint8_t debug_log_empty;
-__attribute__((section(".noinit"))) char debug_error_log[32];
-__attribute__((section(".noinit"))) volatile uint32_t debug_error_line;
 
 /**
  * Check (RCC->CSR)
@@ -65,31 +64,34 @@ void debug_reset_cause(void)
 
     if (reset_cause != DEBUG_RESET_IWDG && reset_cause != DEBUG_RESET_WWDG)
     {
-        debug_log_empty = 0x00;
-    }
-    else
-    {
-        debug_show_log();
+        error_log.err_log_occur = 0x00;
     }
 
-    printf("\r\n[Reset Cause] : %s \r\n", reset_cause_debug);
+    printf("\r\n" DEBUG_COLOR_GREEN "[Reset Cause] : %s" DEBUG_COLOR_RESET "\r\n", reset_cause_debug);
+    debug_show_log();
 }
 
-void debug_log_error(char * file, uint32_t line)
+void debug_log_error(char * file, const char * func, uint32_t line)
 {
-    debug_log_empty = DEBUG_ERROR_OCCUR;
-    strcpy(debug_error_log, file);
-    debug_error_line = line;
+    error_log.err_log_occur = DEBUG_ERROR_OCCUR;
+    strcpy(error_log.err_log_file, file);
+    strcpy(error_log.err_log_func, func);
+    error_log.err_log_line = line;
 }
 
 void debug_show_log(void)
 {
-    if (debug_log_empty == DEBUG_ERROR_OCCUR)
+    if (error_log.err_log_occur == DEBUG_ERROR_OCCUR)
     {
-        printf("[Debug log]: file %c on line %ld\r\n", *debug_error_log, debug_error_line);
+        printf(DEBUG_COLOR_RED "[Debug log]: %s %ld line , %s\r\n" DEBUG_COLOR_RESET, error_log.err_log_file, error_log.err_log_line, error_log.err_log_func);
     }
-    else
+}
+
+void debug_error_handler(uint8_t * file, const char * func, uint32_t line)
+{
+    debug_log_error((char*)file, (const char*)func, line);
+    while (1)
     {
-        printf("[Debug log]: nothing \r\n");
+        uart_idle();
     }
 }

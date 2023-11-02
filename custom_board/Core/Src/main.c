@@ -31,7 +31,6 @@
 #include "can.h"
 #include "timer_control.h"
 #include "usart.h"
-#include "debug.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -97,7 +96,7 @@ int main(void)
   LL_GPIO_SetOutputPin(LED_2_GPIO_Port, LED_2_Pin);
 
   setbuf(stdout, NULL);
-  printf("\r\n===== Hello, this is a custom board LL example =====\r\n");
+  printf("\r\n\r\n\r\n" DEBUG_COLOR_MAGENTA "===== Hello, this is a custom board LL example =====\r\n" DEBUG_COLOR_RESET);
 
   debug_reset_cause();
 
@@ -195,7 +194,7 @@ void assert_failed(uint8_t *file, uint32_t line)
      ex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
     
     // printf("Wrong parameters value: file %s on line %ld\r\n", file, line);
-    debug_log_error((char*)file, line);
+    debug_log_error((char*)file, NULL, line);
     while (1)
     {
       // uart_idle();

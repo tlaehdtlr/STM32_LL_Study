@@ -116,7 +116,7 @@ static void cli_cmd_debug(uint8_t argc, char **argv)
     {
         if (strcmp(argv[1], "log") == 0)
         {
-            debug_show_log();   
+            debug_show_log();
         }
         else
         {
