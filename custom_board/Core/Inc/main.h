@@ -29,6 +29,7 @@ extern "C" {
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f0xx_hal.h"
 
+#include "stm32f0xx_ll_i2c.h"
 #include "stm32f0xx_ll_crs.h"
 #include "stm32f0xx_ll_rcc.h"
 #include "stm32f0xx_ll_bus.h"
@@ -72,6 +73,8 @@ void Error_Handler(void);
 /* Private defines -----------------------------------------------------------*/
 #define LED_1_Pin LL_GPIO_PIN_3
 #define LED_1_GPIO_Port GPIOF
+#define XSHUT_Pin LL_GPIO_PIN_2
+#define XSHUT_GPIO_Port GPIOA
 #define LED_3_Pin LL_GPIO_PIN_10
 #define LED_3_GPIO_Port GPIOD
 #define LED_2_Pin LL_GPIO_PIN_6
