@@ -36,6 +36,9 @@ BUILD_DIR = build
 ######################################
 # C sources
 C_SOURCES =  \
+Core/Thirdparty_driver/Src/VL53L1X_calibration.c \
+Core/Thirdparty_driver/Src/VL53L1X_api.c \
+Core/Src/vl53l1_platform.c \
 Core/Src/debug.c \
 Core/Src/cli.c \
 Core/Src/timer_control.c \
@@ -130,6 +133,7 @@ AS_INCLUDES =
 
 # C includes
 C_INCLUDES =  \
+-ICore/Thirdparty_driver/Inc \
 -ICore/Inc \
 -IDrivers/STM32F0xx_HAL_Driver/Inc \
 -IDrivers/STM32F0xx_HAL_Driver/Inc/Legacy \
