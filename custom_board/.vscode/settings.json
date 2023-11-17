@@ -1,0 +1,14 @@
+{
+    "files.associations": {
+        "vl53l1_types.h": "c",
+        "vl53l1_platform.h": "c",
+        "vl53l1_error_codes.h": "c",
+        "vl53l1x_api.h": "c",
+        "time.h": "c",
+        "vl53l1_platform_user_config.h": "c",
+        "vl53l1_ll_def.h": "c",
+        "vl53l1_platform_user_defines.h": "c",
+        "tof_vl53l1_porting.h": "c",
+        "vl53l1_platform_log.h": "c"
+    }
+}

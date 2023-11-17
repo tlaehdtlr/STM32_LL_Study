@@ -32,6 +32,7 @@
 #include "can.h"
 #include "timer_control.h"
 #include "usart.h"
+#include "tof.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -91,7 +92,7 @@ int main(void)
   MX_GPIO_Init();
   MX_USART3_UART_Init();
   MX_TIM6_Init();
-  MX_WWDG_Init();
+  // MX_WWDG_Init();
   MX_CAN_Init();
   MX_I2C1_Init();
   /* USER CODE BEGIN 2 */
@@ -101,7 +102,7 @@ int main(void)
   printf("\r\n\r\n\r\n" DEBUG_COLOR_MAGENTA "===== Hello, this is a custom board LL example =====\r\n" DEBUG_COLOR_RESET);
 
   debug_reset_cause();
-
+  // tof_init();
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -111,6 +112,7 @@ int main(void)
     can_idle();
     timer_control_idle();
     uart_idle();
+    tof_receive_data();
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */

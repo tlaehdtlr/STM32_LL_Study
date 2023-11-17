@@ -1,6 +1,9 @@
 #include "cli.h"
 #include "usart.h"
 #include "debug.h"
+#include "tof.h"
+#include "timer_control.h"
+#include "VL53L1X_api.h"
 
 #define CMD_BUF_SIZE     256
 #define CLI_PROMPT    "\r\n>>> "
@@ -24,6 +27,7 @@ static void cli_process_command(void);
 static void cli_cmd_help(uint8_t argc, char **argv);
 static void cli_cmd_reset(uint8_t argc, char **argv);
 static void cli_cmd_debug(uint8_t argc, char **argv);
+static void cli_cmd_tof(uint8_t argc, char **argv);
 const cli_cmd_t cli_commands[] =
 {
     {
@@ -48,6 +52,16 @@ const cli_cmd_t cli_commands[] =
         cli_cmd_debug,
         "usage : debug \r\n \
         \r\t\t  log \r\n \
+        "
+    },
+    {
+        "tof",
+        cli_cmd_tof,
+        "usage : tof \r\n \
+        \r\t\t  init \r\n \
+        \r\t\t  start \r\n \
+        \r\t\t  stop \r\n \
+        \r\t\t  meas \r\n \
         "
     }
 };
@@ -117,6 +131,42 @@ static void cli_cmd_debug(uint8_t argc, char **argv)
         if (strcmp(argv[1], "log") == 0)
         {
             debug_show_log();
+        }
+        else
+        {
+            cli_show_command(argv[0]);
+        }
+    }
+}
+
+uint8_t test_arr[10] = {0,};
+static void cli_cmd_tof(uint8_t argc, char **argv)
+{
+    if (argc == 1)
+    {
+        cli_show_command(argv[0]);
+    }
+    else
+    {
+        if (strcmp(argv[1], "init") == 0)
+        {
+            tof_init();
+        }
+        else if (strcmp(argv[1], "start") == 0)
+        {
+            tof_start(1);
+        }
+        else if (strcmp(argv[1], "stop") == 0)
+        {
+            tof_start(0);
+        }
+        else if (strcmp(argv[1], "meas") == 0)
+        {
+            tof_start_measurement();
+        }
+        else if (strcmp(argv[1], "get") == 0)
+        {
+            tof_get_config();
         }
         else
         {

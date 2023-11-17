@@ -33,43 +33,328 @@
 * 
 */
 
+
 #include "vl53l1_platform.h"
+#include "vl53l1_platform_log.h"
+//#include "vl53l1_api.h"
+#include "vl53l1_platform_user_config.h"
+// #include "stm32xxx_hal.h"
 #include <string.h>
 #include <time.h>
 #include <math.h>
+#include "vl53l1_error_codes.h"
+#include "i2c.h"
+#include "timer_control.h"
 
-int8_t VL53L1_WriteMulti( uint16_t dev, uint16_t index, uint8_t *pdata, uint32_t count) {
-	return 0; // to be implemented
+#define I2C_TIME_OUT_BASE   10
+#define I2C_TIME_OUT_BYTE   1
+
+#ifndef HAL_I2C_MODULE_ENABLED
+#warning "HAL I2C module must be enable "
+#endif
+
+uint8_t _I2CBuffer[256];
+
+int _I2CWrite(uint16_t Dev, uint8_t *pdata, uint32_t count) {
+    int status;
+    int i2c_time_out = I2C_TIME_OUT_BASE+ count* I2C_TIME_OUT_BYTE;
+
+    status = HAL_I2C_Master_Transmit(&hi2c1, Dev, pdata, count, i2c_time_out);
+    if (status) {
+
+    }
+    return status;
 }
 
-int8_t VL53L1_ReadMulti(uint16_t dev, uint16_t index, uint8_t *pdata, uint32_t count){
-	return 0; // to be implemented
+int _I2CRead(uint16_t Dev, uint8_t *pdata, uint32_t count) {
+    int status;
+    int i2c_time_out = I2C_TIME_OUT_BASE+ count* I2C_TIME_OUT_BYTE;
+
+    status = HAL_I2C_Master_Receive(&hi2c1, Dev|1, pdata, count, i2c_time_out);
+    if (status) {
+    }
+    return status;
 }
 
-int8_t VL53L1_WrByte(uint16_t dev, uint16_t index, uint8_t data) {
-	return 0; // to be implemented
+VL53L1_Error VL53L1_WriteMulti(uint16_t Dev, uint16_t index, uint8_t *pdata, uint32_t count) {
+    int status_int;
+    VL53L1_Error Status = VL53L1_ERROR_NONE;
+    if (count > sizeof(_I2CBuffer) - 1) {
+        return VL53L1_ERROR_INVALID_PARAMS;
+    }
+    _I2CBuffer[0] = index>>8;
+    _I2CBuffer[1] = index&0xFF;
+    memcpy(&_I2CBuffer[2], pdata, count);
+
+    status_int = _I2CWrite(Dev, _I2CBuffer, count + 2);
+    if (status_int != 0) {
+        Status = VL53L1_ERROR_CONTROL_INTERFACE;
+    }
+
+    return Status;
 }
 
-int8_t VL53L1_WrWord(uint16_t dev, uint16_t index, uint16_t data) {
-	return 0; // to be implemented
+// the ranging_sensor_comms.dll will take care of the page selection
+VL53L1_Error VL53L1_ReadMulti(uint16_t Dev, uint16_t index, uint8_t *pdata, uint32_t count) {
+    VL53L1_Error Status = VL53L1_ERROR_NONE;
+    int32_t status_int;
+
+    _I2CBuffer[0] = index>>8;
+    _I2CBuffer[1] = index&0xFF;
+
+    status_int = _I2CWrite(Dev, _I2CBuffer, 2);
+    if (status_int != 0) {
+        Status = VL53L1_ERROR_CONTROL_INTERFACE;
+        goto done;
+    }
+    status_int = _I2CRead(Dev, pdata, count);
+    if (status_int != 0) {
+        Status = VL53L1_ERROR_CONTROL_INTERFACE;
+    }
+done:
+
+    return Status;
 }
 
-int8_t VL53L1_WrDWord(uint16_t dev, uint16_t index, uint32_t data) {
-	return 0; // to be implemented
+VL53L1_Error VL53L1_WrByte(uint16_t Dev, uint16_t index, uint8_t data) {
+    VL53L1_Error Status = VL53L1_ERROR_NONE;
+    int32_t status_int;
+
+    _I2CBuffer[0] = index>>8;
+    _I2CBuffer[1] = index&0xFF;
+    _I2CBuffer[2] = data;
+
+    status_int = _I2CWrite(Dev, _I2CBuffer, 3);
+    if (status_int != 0) {
+        Status = VL53L1_ERROR_CONTROL_INTERFACE;
+    }
+
+    return Status;
 }
 
-int8_t VL53L1_RdByte(uint16_t dev, uint16_t index, uint8_t *data) {
-	return 0; // to be implemented
+VL53L1_Error VL53L1_WrWord(uint16_t Dev, uint16_t index, uint16_t data) {
+    VL53L1_Error Status = VL53L1_ERROR_NONE;
+    int32_t status_int;
+
+    _I2CBuffer[0] = index>>8;
+    _I2CBuffer[1] = index&0xFF;
+    _I2CBuffer[2] = data >> 8;
+    _I2CBuffer[3] = data & 0x00FF;
+
+    status_int = _I2CWrite(Dev, _I2CBuffer, 4);
+    if (status_int != 0) {
+        Status = VL53L1_ERROR_CONTROL_INTERFACE;
+    }
+
+    return Status;
 }
 
-int8_t VL53L1_RdWord(uint16_t dev, uint16_t index, uint16_t *data) {
-	return 0; // to be implemented
+VL53L1_Error VL53L1_WrDWord(uint16_t Dev, uint16_t index, uint32_t data) {
+    VL53L1_Error Status = VL53L1_ERROR_NONE;
+    int32_t status_int;
+    _I2CBuffer[0] = index>>8;
+    _I2CBuffer[1] = index&0xFF;
+    _I2CBuffer[2] = (data >> 24) & 0xFF;
+    _I2CBuffer[3] = (data >> 16) & 0xFF;
+    _I2CBuffer[4] = (data >> 8)  & 0xFF;
+    _I2CBuffer[5] = (data >> 0 ) & 0xFF;
+
+    status_int = _I2CWrite(Dev, _I2CBuffer, 6);
+    if (status_int != 0) {
+        Status = VL53L1_ERROR_CONTROL_INTERFACE;
+    }
+
+    return Status;
 }
 
-int8_t VL53L1_RdDWord(uint16_t dev, uint16_t index, uint32_t *data) {
-	return 0; // to be implemented
+VL53L1_Error VL53L1_UpdateByte(uint16_t Dev, uint16_t index, uint8_t AndData, uint8_t OrData) {
+    VL53L1_Error Status = VL53L1_ERROR_NONE;
+    uint8_t data;
+
+    Status = VL53L1_RdByte(Dev, index, &data);
+    if (Status) {
+        goto done;
+    }
+    data = (data & AndData) | OrData;
+    Status = VL53L1_WrByte(Dev, index, data);
+done:
+    return Status;
 }
 
-int8_t VL53L1_WaitMs(uint16_t dev, int32_t wait_ms){
-	return 0; // to be implemented
+VL53L1_Error VL53L1_RdByte(uint16_t Dev, uint16_t index, uint8_t *data) {
+    VL53L1_Error Status = VL53L1_ERROR_NONE;
+    int32_t status_int;
+
+	_I2CBuffer[0] = index>>8;
+	_I2CBuffer[1] = index&0xFF;
+
+    status_int = _I2CWrite(Dev, _I2CBuffer, 2);
+    if( status_int ){
+        Status = VL53L1_ERROR_CONTROL_INTERFACE;
+        goto done;
+    }
+    status_int = _I2CRead(Dev, data, 1);
+    if (status_int != 0) {
+        Status = VL53L1_ERROR_CONTROL_INTERFACE;
+    }
+done:
+
+    return Status;
 }
+
+VL53L1_Error VL53L1_RdWord(uint16_t Dev, uint16_t index, uint16_t *data) {
+    VL53L1_Error Status = VL53L1_ERROR_NONE;
+    int32_t status_int;
+
+    _I2CBuffer[0] = index>>8;
+	_I2CBuffer[1] = index&0xFF;
+
+    status_int = _I2CWrite(Dev, _I2CBuffer, 2);
+
+    if( status_int ){
+        Status = VL53L1_ERROR_CONTROL_INTERFACE;
+        goto done;
+    }
+    status_int = _I2CRead(Dev, _I2CBuffer, 2);
+    if (status_int != 0) {
+        Status = VL53L1_ERROR_CONTROL_INTERFACE;
+        goto done;
+    }
+
+    *data = ((uint16_t)_I2CBuffer[0]<<8) + (uint16_t)_I2CBuffer[1];
+done:
+
+    return Status;
+}
+
+VL53L1_Error VL53L1_RdDWord(uint16_t Dev, uint16_t index, uint32_t *data) {
+    VL53L1_Error Status = VL53L1_ERROR_NONE;
+    int32_t status_int;
+
+    _I2CBuffer[0] = index>>8;
+	_I2CBuffer[1] = index&0xFF;
+
+    status_int = _I2CWrite(Dev, _I2CBuffer, 2);
+    if (status_int != 0) {
+        Status = VL53L1_ERROR_CONTROL_INTERFACE;
+        goto done;
+    }
+    status_int = _I2CRead(Dev, _I2CBuffer, 4);
+    if (status_int != 0) {
+        Status = VL53L1_ERROR_CONTROL_INTERFACE;
+        goto done;
+    }
+
+    *data = ((uint32_t)_I2CBuffer[0]<<24) + ((uint32_t)_I2CBuffer[1]<<16) + ((uint32_t)_I2CBuffer[2]<<8) + (uint32_t)_I2CBuffer[3];
+
+done:
+    return Status;
+}
+
+VL53L1_Error VL53L1_GetTickCount(
+	uint32_t *ptick_count_ms)
+{
+
+    /* Returns current tick count in [ms] */
+
+	VL53L1_Error status  = VL53L1_ERROR_NONE;
+
+	//*ptick_count_ms = timeGetTime();
+	*ptick_count_ms = 0;
+
+	return status;
+}
+
+
+
+
+VL53L1_Error VL53L1_GetTimerFrequency(int32_t *ptimer_freq_hz)
+{
+	*ptimer_freq_hz = 0;
+
+	return VL53L1_ERROR_NONE;
+}
+
+
+VL53L1_Error VL53L1_WaitMs(uint16_t dev, int32_t wait_ms){
+	(void)dev;
+	// HAL_Delay(wait_ms);
+    set_delay_ms(wait_ms);
+    return VL53L1_ERROR_NONE;
+}
+
+VL53L1_Error VL53L1_WaitUs(uint16_t dev, int32_t wait_us){
+	(void)dev;
+	// HAL_Delay(wait_us/1000);
+    set_delay_ms(wait_us/1000);
+    return VL53L1_ERROR_NONE;
+}
+
+VL53L1_Error VL53L1_WaitValueMaskEx(
+	uint16_t 			dev,
+	uint32_t      timeout_ms,
+	uint16_t      index,
+	uint8_t       value,
+	uint8_t       mask,
+	uint32_t      poll_delay_ms)
+{
+
+	/*
+	 * Platform implementation of WaitValueMaskEx V2WReg script command
+	 *
+	 * WaitValueMaskEx(
+	 *          duration_ms,
+	 *          index,
+	 *          value,
+	 *          mask,
+	 *          poll_delay_ms);
+	 */
+
+	VL53L1_Error status         = VL53L1_ERROR_NONE;
+	uint32_t     start_time_ms = 0;
+	uint32_t     current_time_ms = 0;
+	uint32_t     polling_time_ms = 0;
+	uint8_t      byte_value      = 0;
+	uint8_t      found           = 0;
+	/* calculate time limit in absolute time */
+
+	 VL53L1_GetTickCount(&start_time_ms);
+
+
+	/* wait until value is found, timeout reached on error occurred */
+
+	while ((status == VL53L1_ERROR_NONE) &&
+		   (polling_time_ms < timeout_ms) &&
+		   (found == 0)) {
+
+		if (status == VL53L1_ERROR_NONE)
+			status = VL53L1_RdByte(
+							dev,
+							index,
+							&byte_value);
+
+		if ((byte_value & mask) == value)
+			found = 1;
+
+		if (status == VL53L1_ERROR_NONE  &&
+			found == 0 &&
+			poll_delay_ms > 0)
+			status = VL53L1_WaitMs(
+					dev,
+					poll_delay_ms);
+
+		/* Update polling time (Compare difference rather than absolute to
+		negate 32bit wrap around issue) */
+		VL53L1_GetTickCount(&current_time_ms);
+		polling_time_ms = current_time_ms - start_time_ms;
+
+	}
+
+	if (found == 0 && status == VL53L1_ERROR_NONE)
+		status = VL53L1_ERROR_TIME_OUT;
+
+	return status;
+}
+
+
+

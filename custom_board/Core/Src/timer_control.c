@@ -29,8 +29,13 @@ volatile uint32_t blinking_cnt = BLINKING_OFFSET;
 volatile uint16_t wdt_cnt = 0;
 /******************************************************/
 
+volatile uint16_t delay_ms = 0;
+volatile uint16_t delay_cnt = 0;
 
 
+void (*retry_func)(void);
+volatile uint16_t retry_tim = 0;
+volatile uint16_t retry_cnt = 0;
 
 static void timer_control_check_blinking_led(void);
 static void timer_control_wdt(void);
@@ -70,10 +75,38 @@ void timer6_callback(void)
 {
   blinking_cnt++;
   wdt_cnt++;
+  delay_cnt++;
+  retry_cnt++;
+}
+
+void set_delay_ms(uint16_t delay)
+{
+  delay_ms = delay;
+  delay_cnt = 0;
+  while (delay_cnt!=delay_ms);
+}
+
+void set_retry_func(void* func, uint16_t delay)
+{
+  retry_func = func;
+  retry_tim = delay;
+}
+
+void check_retry_func(void)
+{
+  if (retry_tim)
+  {
+    if (retry_cnt >= retry_tim)
+    {
+      retry_cnt = 0;
+      retry_func();
+    }
+  }
 }
 
 void timer_control_idle(void)
 {
     timer_control_check_blinking_led();
-    timer_control_wdt();
+    // timer_control_wdt();
+    check_retry_func();
 }
