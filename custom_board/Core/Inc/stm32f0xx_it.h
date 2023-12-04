@@ -29,6 +29,7 @@
 /* USER CODE BEGIN Includes */
 #include "usart.h"
 #include "timer_control.h"
+#include "i2c.h"
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/

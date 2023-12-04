@@ -56,7 +56,6 @@
 
 /* External variables --------------------------------------------------------*/
 extern CAN_HandleTypeDef hcan;
-extern I2C_HandleTypeDef hi2c1;
 /* USER CODE BEGIN EV */
 
 /* USER CODE END EV */
@@ -182,12 +181,72 @@ void I2C1_IRQHandler(void)
 {
   /* USER CODE BEGIN I2C1_IRQn 0 */
 
-  /* USER CODE END I2C1_IRQn 0 */
-  if (hi2c1.Instance->ISR & (I2C_FLAG_BERR | I2C_FLAG_ARLO | I2C_FLAG_OVR)) {
-    HAL_I2C_ER_IRQHandler(&hi2c1);
-  } else {
-    HAL_I2C_EV_IRQHandler(&hi2c1);
+  // transmit
+
+#if 0
+  // /* Check NACK flag value in ISR register */
+  
+  if(LL_I2C_IsActiveFlag_NACK(I2C1))
+  {
+    /* End of Transfer */
+    LL_I2C_ClearFlag_NACK(I2C1);
+    printf("NACK \r\n");
   }
+  /* Check TXIS flag value in ISR register */
+  if(LL_I2C_IsActiveFlag_TXIS(I2C1))
+  {
+    // set_tx_ready(true);
+    printf("TXIS \r\n");
+  }
+  /* Check STOP flag value in ISR register */
+  // else if(LL_I2C_IsActiveFlag_STOP(I2C1))
+  // {
+  //   /* Clear STOP flag value in ISR register */
+  //   LL_I2C_ClearFlag_STOP(I2C1);
+  //   /* Check TXE flag value in ISR register */
+  // }
+
+  if(!LL_I2C_IsActiveFlag_TXE(I2C1))
+  {
+    /* Flush the TXDR register */
+    LL_I2C_ClearFlag_TXE(I2C1);
+    printf("TXE \r\n");
+  }
+#endif
+
+// receive
+
+  /* Check RXNE flag value in ISR register */
+  if(LL_I2C_IsActiveFlag_RXNE(I2C1))
+  {
+    /* Call function Master Reception Callback */
+    // Master_Reception_Callback();
+    // printf("RXNE \r\n");
+  }
+  /* Check STOP flag value in ISR register */
+  if(LL_I2C_IsActiveFlag_STOP(I2C1))
+  {
+    /* End of Transfer */
+    LL_I2C_ClearFlag_STOP(I2C1);
+
+    /* Call function Master Complete Callback */
+    // Master_Complete_Callback();
+    // printf("STOP \r\n");
+  }
+
+  if (LL_I2C_IsActiveFlag_TC(I2C1))
+  {
+    
+  }
+  // else
+  // {
+  //   /* Call Error function */
+  //   // Error_Handler();
+  // }
+
+
+  /* USER CODE END I2C1_IRQn 0 */
+
   /* USER CODE BEGIN I2C1_IRQn 1 */
 
   /* USER CODE END I2C1_IRQn 1 */

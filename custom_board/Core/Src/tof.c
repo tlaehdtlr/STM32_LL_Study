@@ -139,6 +139,8 @@ void tof_init(void)
         printf("XSHUT not high \r\n");
     }
 
+    set_delay_ms(1);
+
     /* Those basic I2C read functions can be used to check your own I2C functions */
     status = VL53L1_RdByte(tof_dev_1, 0x010F, &byteData);
     printf("VL53L1X Model_ID: %X\r\n", byteData);

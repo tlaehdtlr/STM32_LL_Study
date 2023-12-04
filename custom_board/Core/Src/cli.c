@@ -4,6 +4,7 @@
 #include "tof.h"
 #include "timer_control.h"
 #include "VL53L1X_api.h"
+#include "i2c.h"
 
 #define CMD_BUF_SIZE     256
 #define CLI_PROMPT    "\r\n>>> "
@@ -28,6 +29,7 @@ static void cli_cmd_help(uint8_t argc, char **argv);
 static void cli_cmd_reset(uint8_t argc, char **argv);
 static void cli_cmd_debug(uint8_t argc, char **argv);
 static void cli_cmd_tof(uint8_t argc, char **argv);
+static void cli_cmd_test(uint8_t argc, char **argv);
 const cli_cmd_t cli_commands[] =
 {
     {
@@ -62,6 +64,14 @@ const cli_cmd_t cli_commands[] =
         \r\t\t  start \r\n \
         \r\t\t  stop \r\n \
         \r\t\t  meas \r\n \
+        "
+    },
+    {
+        "test",
+        cli_cmd_test,
+        "usage : test \r\n \
+        \r\t\t  1 \r\n \
+        \r\t\t  2 \r\n \
         "
     }
 };
@@ -167,6 +177,27 @@ static void cli_cmd_tof(uint8_t argc, char **argv)
         else if (strcmp(argv[1], "get") == 0)
         {
             tof_get_config();
+        }
+        else
+        {
+            cli_show_command(argv[0]);
+        }
+    }
+}
+
+static void cli_cmd_test(uint8_t argc, char **argv)
+{
+    if (argc == 1)
+    {
+        cli_show_command(argv[0]);
+    }
+    else
+    {
+        if (strcmp(argv[1], "1") == 0)
+        {
+        }
+        else if (strcmp(argv[1], "2") == 0)
+        {
         }
         else
         {

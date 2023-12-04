@@ -9,6 +9,7 @@
         "vl53l1_ll_def.h": "c",
         "vl53l1_platform_user_defines.h": "c",
         "tof_vl53l1_porting.h": "c",
-        "vl53l1_platform_log.h": "c"
+        "vl53l1_platform_log.h": "c",
+        "stm32f0xx_it.h": "c"
     }
 }
