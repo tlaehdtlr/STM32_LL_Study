@@ -30,6 +30,7 @@ extern "C" {
 #include "stm32f0xx_hal.h"
 
 #include "stm32f0xx_ll_i2c.h"
+#include "stm32f0xx_ll_iwdg.h"
 #include "stm32f0xx_ll_crs.h"
 #include "stm32f0xx_ll_rcc.h"
 #include "stm32f0xx_ll_bus.h"
@@ -80,6 +81,8 @@ void Error_Handler(void);
 #define LED_2_Pin LL_GPIO_PIN_6
 #define LED_2_GPIO_Port GPIOF
 /* USER CODE BEGIN Private defines */
+#define TASK_TIME_ASSIGN    (100 / 0.8)   // 100ms 
+#define NUMS_TASK           3
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus

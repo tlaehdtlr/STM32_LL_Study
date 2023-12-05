@@ -20,9 +20,9 @@
 #include "main.h"
 #include "can.h"
 #include "i2c.h"
+#include "iwdg.h"
 #include "tim.h"
 #include "usart.h"
-#include "wwdg.h"
 #include "gpio.h"
 
 /* Private includes ----------------------------------------------------------*/
@@ -92,9 +92,9 @@ int main(void)
   MX_GPIO_Init();
   MX_USART3_UART_Init();
   MX_TIM6_Init();
-  // MX_WWDG_Init();
   MX_CAN_Init();
   MX_I2C1_Init();
+  MX_IWDG_Init();
   /* USER CODE BEGIN 2 */
   LL_GPIO_SetOutputPin(LED_2_GPIO_Port, LED_2_Pin);
 
@@ -145,6 +145,13 @@ void SystemClock_Config(void)
 
   }
   LL_RCC_HSI_SetCalibTrimming(16);
+  LL_RCC_LSI_Enable();
+
+   /* Wait till LSI is ready */
+  while(LL_RCC_LSI_IsReady() != 1)
+  {
+
+  }
   LL_RCC_PLL_ConfigDomain_SYS(LL_RCC_PLLSOURCE_HSE, LL_RCC_PLL_MUL_2, LL_RCC_PREDIV_DIV_1);
   LL_RCC_PLL_Enable();
 

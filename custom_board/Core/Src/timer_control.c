@@ -1,7 +1,7 @@
 /**
  * Tim6 
  ** interrupt : 1ms
- ** led blinking, wdt refresh
+ ** led blinking, wwdg refresh
 */
 
 #include "timer_control.h"
@@ -24,9 +24,10 @@ volatile uint32_t blinking_cnt = BLINKING_OFFSET;
 /**
  * Watchdog timer
 */
-#define WDT_TIMEOUT     30  // 30ms
 
-volatile uint16_t wdt_cnt = 0;
+#define WWDG_TIMEOUT         30  // 30ms
+
+volatile uint16_t wwdg_cnt = 0;
 /******************************************************/
 
 volatile uint16_t delay_ms = 0;
@@ -38,7 +39,7 @@ volatile uint16_t retry_tim = 0;
 volatile uint16_t retry_cnt = 0;
 
 static void timer_control_check_blinking_led(void);
-static void timer_control_wdt(void);
+static void timer_control_wwdg(void);
 
 
 void timer_control_blinking_led_set(bool fast)
@@ -62,11 +63,17 @@ static void timer_control_check_blinking_led(void)
   }
 }
 
-static void timer_control_wdt(void)
+static void timer_control_iwdg(void)
 {
-    if (wdt_cnt >= WDT_TIMEOUT)
+  LL_IWDG_ReloadCounter(IWDG);
+}
+
+static void timer_control_wwdg(void)
+{
+    if (wwdg_cnt >= WWDG_TIMEOUT)
     {
-        wdt_cnt = 0;
+        wwdg_cnt = 0;
+
         LL_WWDG_SetCounter(WWDG, 120);
     }
 }
@@ -74,7 +81,7 @@ static void timer_control_wdt(void)
 void timer6_callback(void)
 {
   blinking_cnt++;
-  wdt_cnt++;
+  wwdg_cnt++;
   delay_cnt++;
   retry_cnt++;
 }
@@ -107,6 +114,7 @@ void check_retry_func(void)
 void timer_control_idle(void)
 {
     timer_control_check_blinking_led();
-    // timer_control_wdt();
+    // timer_control_wwdg();
+    timer_control_iwdg();
     check_retry_func();
 }

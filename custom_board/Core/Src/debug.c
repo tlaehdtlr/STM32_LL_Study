@@ -23,32 +23,32 @@ void debug_reset_cause(void)
         reset_cause = DEBUG_RESET_IWDG;
         reset_cause_debug = "DEBUG_RESET_IWDG";
     }
-    if (LL_RCC_IsActiveFlag_LPWRRST())
+    else if (LL_RCC_IsActiveFlag_LPWRRST())
     {
         reset_cause = DEBUG_RESET_LPWR;
         reset_cause_debug = "DEBUG_RESET_LPWR";
     }
-    if (LL_RCC_IsActiveFlag_OBLRST())
+    else if (LL_RCC_IsActiveFlag_OBLRST())
     {
         reset_cause = DEBUG_RESET_OBL;
         reset_cause_debug = "DEBUG_RESET_OBL";
     }
-    if (LL_RCC_IsActiveFlag_PINRST())
+    else if (LL_RCC_IsActiveFlag_PINRST())
     {
         reset_cause = DEBUG_RESET_PIN;
         reset_cause_debug = "DEBUG_RESET_PIN";
     }
-    if (LL_RCC_IsActiveFlag_PORRST())
+    else if (LL_RCC_IsActiveFlag_PORRST())
     {
         reset_cause = DEBUG_RESET_POR;
         reset_cause_debug = "DEBUG_RESET_POR";
     }
-    if (LL_RCC_IsActiveFlag_SFTRST())
+    else if (LL_RCC_IsActiveFlag_SFTRST())
     {
         reset_cause = DEBUG_RESET_SFT;
         reset_cause_debug = "DEBUG_RESET_SFT";
     }
-    if (LL_RCC_IsActiveFlag_WWDGRST())
+    else if (LL_RCC_IsActiveFlag_WWDGRST())
     {
         reset_cause = DEBUG_RESET_WWDG;
         reset_cause_debug = "DEBUG_RESET_WWDG";
@@ -84,6 +84,7 @@ void debug_show_log(void)
     if (error_log.err_log_occur == DEBUG_ERROR_OCCUR)
     {
         printf(DEBUG_COLOR_RED "[Debug log]: %s %ld line , %s\r\n" DEBUG_COLOR_RESET, error_log.err_log_file, error_log.err_log_line, error_log.err_log_func);
+        error_log.err_log_occur = 0;
     }
 }
 
